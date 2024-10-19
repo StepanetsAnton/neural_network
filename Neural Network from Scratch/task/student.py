@@ -5,8 +5,6 @@ import requests
 from matplotlib import pyplot as plt
 
 
-# scroll to the bottom to start coding your solution
-
 
 def one_hot(data: np.ndarray) -> np.ndarray:
     y_train = np.zeros((data.size, data.max() + 1))
@@ -57,6 +55,16 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
+class OneLayerNeural:
+    def __init__(self, n_features, n_classes):
+        self.weights = xavier(n_features, n_classes)
+        self.biases = xavier(1, n_classes)
+
+    def forward(self, X):
+        z = np.dot(X, self.weights) + self.biases
+        self.output = sigmoid(z)
+        return self.output
+
 if __name__ == '__main__':
 
     if not os.path.exists('../Data'):
@@ -97,7 +105,10 @@ if __name__ == '__main__':
     sigmoid_input = np.array([-1, 0, 1, 2])
     sigmoid_output = sigmoid(sigmoid_input).flatten().tolist()
 
-    print([value1, value2],xavier_output, sigmoid_output)
+    model = OneLayerNeural(n_features=784, n_classes=10)
+
+    output = model.forward(X_train_scaled[:2])
+    print(output.flatten().tolist())
 
 
 
