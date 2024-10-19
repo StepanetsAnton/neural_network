@@ -54,6 +54,14 @@ def xavier(n_in, n_out):
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
+def sigmoid_derivative(z):
+    return sigmoid(z) * (1 - sigmoid(z))
+
+def mse(y_true, y_pred):
+    return np.mean(np.square(y_pred - y_true))
+
+def mse_derivative(y_true, y_pred):
+    return 2 * (y_pred - y_true)
 
 class OneLayerNeural:
     def __init__(self, n_features, n_classes):
@@ -64,6 +72,18 @@ class OneLayerNeural:
         z = np.dot(X, self.weights) + self.biases
         self.output = sigmoid(z)
         return self.output
+
+    def backprop(self, X, y, alpha):
+        z = np.dot(X, self.weights) + self.biases
+        a = sigmoid(z)
+
+        dz = mse_derivative(y, a) * sigmoid_derivative(z)
+        dw = np.dot(X.T, dz)/X.shape[0]
+        db = np.sum(dz, axis=0, keepdims=True)/X.shape[0]
+
+        self.weights -= alpha * dw
+        self.biases -= alpha * db
+
 
 if __name__ == '__main__':
 
@@ -105,10 +125,24 @@ if __name__ == '__main__':
     sigmoid_input = np.array([-1, 0, 1, 2])
     sigmoid_output = sigmoid(sigmoid_input).flatten().tolist()
 
+
+    test_X = np.array([-1, 0, 1, 2])
+    test_y = np.array([4, 3, 2, 1])
+
+    test_mse = mse(test_y, test_X)
+    test_mse_derivative = mse_derivative(test_y, test_X)
+
+    test_sigmoid_derivative = sigmoid_derivative(test_X)
+
+
     model = OneLayerNeural(n_features=784, n_classes=10)
 
     output = model.forward(X_train_scaled[:2])
-    print(output.flatten().tolist())
+    model.backprop(X_train_scaled[:2], y_train[:2], alpha=0.1)
+    updated_output = model.forward(X_train_scaled[:2])
+    final_mse = mse(y_train[:2], updated_output)
+
+    print(test_mse.flatten(),test_mse_derivative.flatten().tolist(),test_sigmoid_derivative.flatten().tolist(),final_mse.flatten())
 
 
 
