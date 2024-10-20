@@ -15,8 +15,6 @@ def one_hot(data: np.ndarray) -> np.ndarray:
 
 def plot(loss_history: list, accuracy_history: list, filename='plot'):
 
-    # function to visualize learning process at stage 4
-
     n_epochs = len(loss_history)
 
     plt.figure(figsize=(20, 10))
@@ -88,6 +86,23 @@ class OneLayerNeural:
         self.weights -= alpha * dw
         self.biases -= alpha * db
 
+class TwoLayerNeural:
+    def __init__(self, n_features, n_classes, n_hidden=64):
+        self.W1 = xavier(n_features, n_hidden)
+        self.b1 = xavier(1, n_hidden)
+
+        self.W2 = xavier(n_hidden, n_classes)
+        self.b2 = xavier(1, n_classes)
+
+    def forward(self, X):
+        self.z1 = np.dot(X, self.W1) + self.b1
+        self.a1 = sigmoid(self.z1)
+
+        self.z2 = np.dot(self.a1, self.W2) + self.b2
+        self.output = sigmoid(self.z2)
+
+        return self.output
+
 def train_one_epoch(model, X_train, y_train, alpha):
     output = model.forward(X_train)
     model.backprop(X_train, y_train, alpha)
@@ -99,28 +114,25 @@ def full_training(model, X_train, y_train, X_test, y_test, n_epochs=20, batch_si
     loss_history = []
     accuracy_history = []
 
-    # Calculate and store the accuracy of the untrained model
     initial_accuracy = accuracy(y_test, model.forward(X_test))
     accuracy_history.append(initial_accuracy)
     print(f"[{initial_accuracy:.4f}]", end=" ")
 
-    # Training loop
+
     for epoch in tqdm(range(n_epochs), desc="Training Progress"):
-        # Perform batch training
+
         for i in range(0, X_train.shape[0], batch_size):
             X_batch = X_train[i:i + batch_size]
             y_batch = y_train[i:i + batch_size]
             loss = train_one_epoch(model, X_batch, y_batch, alpha)
 
-        # Log loss and accuracy for each epoch
         loss_history.append(loss)
         acc = accuracy(y_test, model.forward(X_test))
         accuracy_history.append(acc)
 
-    # Print the final accuracy history in the required format
+
     print(f"[{', '.join([f'{acc:.4f}' for acc in accuracy_history[1:]])}]")
 
-    # Optionally plot the results
     plot(loss_history, accuracy_history)
 
     return loss_history, accuracy_history
@@ -165,10 +177,13 @@ if __name__ == '__main__':
     sigmoid_input = np.array([-1, 0, 1, 2])
     sigmoid_output = sigmoid(sigmoid_input).flatten().tolist()
 
+    n_features = 784
+    n_classes = 10
 
-    model = OneLayerNeural(n_features=784, n_classes=10)
+    model = TwoLayerNeural(n_features=n_features, n_classes=n_classes)
 
-    loss_history, accuracy_history = full_training(
-        model, X_train_scaled, y_train, X_test_scaled, y_test, n_epochs=20, batch_size=100, alpha=0.5
-    )
+
+    output = model.forward(X_train_scaled[:2])
+
+    print(output.flatten().tolist())
 
