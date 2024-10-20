@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import requests
 from matplotlib import pyplot as plt
-
+from tqdm import tqdm
 
 
 def one_hot(data: np.ndarray) -> np.ndarray:
@@ -63,6 +63,10 @@ def mse(y_true, y_pred):
 def mse_derivative(y_true, y_pred):
     return 2 * (y_pred - y_true)
 
+def accuracy(y_true, y_pred):
+    correct_predictions = np.sum(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1))
+    return correct_predictions / y_true.shape[0]
+
 class OneLayerNeural:
     def __init__(self, n_features, n_classes):
         self.weights = xavier(n_features, n_classes)
@@ -84,6 +88,42 @@ class OneLayerNeural:
         self.weights -= alpha * dw
         self.biases -= alpha * db
 
+def train_one_epoch(model, X_train, y_train, alpha):
+    output = model.forward(X_train)
+    model.backprop(X_train, y_train, alpha)
+    loss = mse(y_train, output)
+    return loss
+
+
+def full_training(model, X_train, y_train, X_test, y_test, n_epochs=20, batch_size=100, alpha=0.5):
+    loss_history = []
+    accuracy_history = []
+
+    # Calculate and store the accuracy of the untrained model
+    initial_accuracy = accuracy(y_test, model.forward(X_test))
+    accuracy_history.append(initial_accuracy)
+    print(f"[{initial_accuracy:.4f}]", end=" ")
+
+    # Training loop
+    for epoch in tqdm(range(n_epochs), desc="Training Progress"):
+        # Perform batch training
+        for i in range(0, X_train.shape[0], batch_size):
+            X_batch = X_train[i:i + batch_size]
+            y_batch = y_train[i:i + batch_size]
+            loss = train_one_epoch(model, X_batch, y_batch, alpha)
+
+        # Log loss and accuracy for each epoch
+        loss_history.append(loss)
+        acc = accuracy(y_test, model.forward(X_test))
+        accuracy_history.append(acc)
+
+    # Print the final accuracy history in the required format
+    print(f"[{', '.join([f'{acc:.4f}' for acc in accuracy_history[1:]])}]")
+
+    # Optionally plot the results
+    plot(loss_history, accuracy_history)
+
+    return loss_history, accuracy_history
 
 if __name__ == '__main__':
 
@@ -126,23 +166,9 @@ if __name__ == '__main__':
     sigmoid_output = sigmoid(sigmoid_input).flatten().tolist()
 
 
-    test_X = np.array([-1, 0, 1, 2])
-    test_y = np.array([4, 3, 2, 1])
-
-    test_mse = mse(test_y, test_X)
-    test_mse_derivative = mse_derivative(test_y, test_X)
-
-    test_sigmoid_derivative = sigmoid_derivative(test_X)
-
-
     model = OneLayerNeural(n_features=784, n_classes=10)
 
-    output = model.forward(X_train_scaled[:2])
-    model.backprop(X_train_scaled[:2], y_train[:2], alpha=0.1)
-    updated_output = model.forward(X_train_scaled[:2])
-    final_mse = mse(y_train[:2], updated_output)
-
-    print(test_mse.flatten(),test_mse_derivative.flatten().tolist(),test_sigmoid_derivative.flatten().tolist(),final_mse.flatten())
-
-
+    loss_history, accuracy_history = full_training(
+        model, X_train_scaled, y_train, X_test_scaled, y_test, n_epochs=20, batch_size=100, alpha=0.5
+    )
 
