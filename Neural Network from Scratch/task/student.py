@@ -134,7 +134,7 @@ def full_training(model, X_train, y_train, X_test, y_test, n_epochs=20, batch_si
 
     initial_accuracy = accuracy(y_test, model.forward(X_test))
     accuracy_history.append(initial_accuracy)
-    print(f"[{initial_accuracy:.4f}]", end=" ")
+    #print(f"[{initial_accuracy:.4f}]", end=" ")
 
 
     for epoch in tqdm(range(n_epochs), desc="Training Progress"):
@@ -200,12 +200,6 @@ if __name__ == '__main__':
 
     model = TwoLayerNeural(n_features=n_features, n_classes=n_classes)
 
-    output_before = model.forward(X_train_scaled[:2])
-
-    model.backprop(X_train_scaled[:2], y_train[:2], alpha=0.1)
-
-    output_after = model.forward(X_train_scaled[:2])
-
-    mse_value = mse(y_train[:2], output_after)
-
-    print(mse_value.flatten().tolist())
+    loss_history, accuracy_history = full_training(
+        model, X_train_scaled, y_train, X_test_scaled, y_test, n_epochs=20, batch_size=100, alpha=0.5
+    )
