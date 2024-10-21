@@ -104,17 +104,14 @@ class TwoLayerNeural:
         return self.output
 
     def backprop(self, X, y, alpha):
-        # Step 1: Calculate the error at the output layer
         dz2 = mse_derivative(y, self.output) * sigmoid_derivative(self.z2)
         dw2 = np.dot(self.a1.T, dz2) / X.shape[0]
         db2 = np.sum(dz2, axis=0, keepdims=True) / X.shape[0]
 
-        # Step 2: Propagate the error to the hidden layer
         dz1 = np.dot(dz2, self.W2.T) * sigmoid_derivative(self.z1)
         dw1 = np.dot(X.T, dz1) / X.shape[0]
         db1 = np.sum(dz1, axis=0, keepdims=True) / X.shape[0]
 
-        # Step 3: Update the weights and biases
         self.W2 -= alpha * dw2
         self.b2 -= alpha * db2
         self.W1 -= alpha * dw1
